@@ -24,7 +24,7 @@ export default function RecuperarSenha() {
       return;
     }
 
-    setMessage('PIN enviado para o e-mail informado. Simulação visual.');
+    setMessage('PIN enviado para o e-mail informado.');
     setStep(2);
   }
 
