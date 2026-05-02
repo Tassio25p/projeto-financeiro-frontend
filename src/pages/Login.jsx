@@ -3,37 +3,100 @@ import { useState } from 'react';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [form, setForm] = useState({ email: '', password: '' });
 
   function handleSubmit(event) {
     event.preventDefault();
-    localStorage.setItem('financas-auth', JSON.stringify({ email, logged: true }));
+
+    localStorage.setItem(
+      'financas-auth',
+      JSON.stringify({ email: form.email, logged: true })
+    );
+
     navigate('/');
   }
 
+  function handleGoogleLogin() {
+    alert('Login com Google será conectado ao backend futuramente.');
+  }
+
   return (
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-5">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-orange-50 flex items-center justify-center p-5">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-brand-teal">Finanças<span className="text-brand-orange">.</span></h1>
-          <p className="text-gray-400 text-sm mt-2">Entre para acessar seu painel financeiro.</p>
+          <h1 className="text-4xl font-black text-brand-teal">
+            Finanças<span className="text-brand-orange">.</span>
+          </h1>
+          <p className="text-gray-400 text-sm mt-2">
+            Acesse seu painel financeiro.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full border border-gray-200 py-3 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition mb-5"
+        >
+          Entrar com Google
+        </button>
+
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-px bg-gray-200 flex-1" />
+          <span className="text-xs text-gray-400 font-bold">ou</span>
+          <div className="h-px bg-gray-200 flex-1" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100" placeholder="seu@email.com" />
+            <label className="block text-sm font-bold text-gray-700 mb-1">
+              E-mail
+            </label>
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100"
+              placeholder="seu@email.com"
+            />
           </div>
+
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Senha</label>
-            <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100" placeholder="••••••••" />
+            <div className="flex justify-between mb-1">
+              <label className="block text-sm font-bold text-gray-700">
+                Senha
+              </label>
+              <Link
+                to="/recuperar-senha"
+                className="text-xs text-brand-orange font-bold hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+
+            <input
+              required
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100"
+              placeholder="••••••••"
+            />
           </div>
-          <button className="w-full bg-brand-teal text-white py-3 rounded-xl font-black shadow hover:bg-teal-700 transition">Entrar</button>
+
+          <button className="w-full bg-brand-teal text-white py-3 rounded-xl font-black shadow hover:bg-teal-700 transition">
+            Entrar
+          </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Ainda não tem conta? <Link to="/registro" className="text-brand-orange font-black hover:underline">Criar cadastro</Link>
+          Ainda não tem conta?{' '}
+          <Link
+            to="/registro"
+            className="text-brand-orange font-black hover:underline"
+          >
+            Criar cadastro
+          </Link>
         </p>
       </div>
     </div>
