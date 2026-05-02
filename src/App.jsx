@@ -10,7 +10,7 @@ import Orcamentos from './pages/Orcamentos';
 import Perfil from './pages/Perfil';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
-
+import RecuperarSenha from './pages/RecuperarSenha';
 function App() {
   return (
     <FinanceProvider>
@@ -33,6 +33,7 @@ function App() {
                     <Route path="/metas" element={<Metas />} />
                     <Route path="/orcamentos" element={<Orcamentos />} />
                     <Route path="/perfil" element={<Perfil />} />
+                    <Route path="/recuperar-senha" element={<RecuperarSenha />} />
                     <Route path="*" element={<div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">Página não encontrada.</div>} />
                   </Routes>
                 </main>
