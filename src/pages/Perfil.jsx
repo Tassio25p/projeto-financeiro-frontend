@@ -1,37 +1,83 @@
-import { useState } from 'react';
+import { useEffect,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFinance } from '../context/FinanceContext';
 import { formatCurrency } from '../utils/formatters';
-
+import { removeToken, updateCurrentUser , getDashboardSummary } from '../services/api';
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, updateUser, resetData, stats } = useFinance();
 
-  const [form, setForm] = useState({
+ const [form, setForm] = useState({
+  name: user.name || '',
+  email: user.email || '',
+  phone: user.phone || '',
+  monthlyIncome: user.monthlyIncome || '',
+  photoUrl: user.photoUrl || '',
+});
+
+useEffect(() => {
+  setForm({
     name: user.name || '',
     email: user.email || '',
     phone: user.phone || '',
     monthlyIncome: user.monthlyIncome || '',
     photoUrl: user.photoUrl || '',
   });
+}, [user]);
 
   const [message, setMessage] = useState('');
+  const [currentBalance, setCurrentBalance] = useState(0);
+ 
+ useEffect(() => {
+  async function loadDashboardBalance() {
+    try {
+      const data = await getDashboardSummary();
+      setCurrentBalance(Number(data.saldo || 0));
+    } catch (error) {
+      console.error('Erro ao carregar saldo:', error.message);
+    }
+  }
 
-  function handleSubmit(event) {
+  loadDashboardBalance();
+}, []);
+ 
+ 
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    updateUser({
-      ...form,
-      monthlyIncome: Number(form.monthlyIncome || 0),
+ try {
+  
+    const updatedUser = await updateCurrentUser({
+      nome: form.name,
+      telefone: form.phone || null,
+      foto_url: form.photoUrl || null,
+      renda_mensal: Number(form.monthlyIncome || 0),
     });
 
+    updateUser({
+    name: updatedUser.nome,
+    email: updatedUser.email,
+    phone: updatedUser.telefone || '',
+    photoUrl: updatedUser.foto_url || '',
+    monthlyIncome: Number(updatedUser.renda_mensal || 0),
+    initialBalance: Number(updatedUser.saldo_inicial || 0),
+    setupCompleted: Boolean(updatedUser.configuracao_inicial_concluida),
+});
+    const dashboardData = await getDashboardSummary();
+    setCurrentBalance(Number(dashboardData.saldo || 0));
     setMessage('Perfil atualizado com sucesso.');
-    setTimeout(() => setMessage(''), 2500);
+
+    setMessage('Perfil atualizado com sucesso.');
+  } catch (error) {
+    setMessage(error.message || 'Erro ao atualizar perfil.');
+  }
+
+  setTimeout(() => setMessage(''), 2500);
   }
 
   function handleLogout() {
-    localStorage.removeItem('financas-auth');
-    navigate('/login');
+  removeToken();
+  navigate('/login');
   }
 
   return (
@@ -68,7 +114,7 @@ export default function Perfil() {
               Saldo atual
             </p>
             <p className="text-2xl font-black text-brand-teal mt-1">
-              {formatCurrency(stats.balance)}
+              {formatCurrency(currentBalance)}
             </p>
           </div>
 
@@ -183,13 +229,6 @@ export default function Perfil() {
               Salvar Perfil
             </button>
 
-            <button
-              type="button"
-              onClick={resetData}
-              className="bg-red-50 text-red-500 px-5 py-3 rounded-xl font-black hover:bg-red-100 transition"
-            >
-              Restaurar dados de exemplo
-            </button>
           </div>
         </form>
       </div>

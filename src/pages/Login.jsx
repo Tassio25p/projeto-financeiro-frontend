@@ -1,23 +1,45 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { loginUser , getCurrentUser } from '../services/api';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
 
-  function handleSubmit(event) {
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event) {
     event.preventDefault();
+    setError('');
+    setLoading(true);
 
-    localStorage.setItem(
-      'financas-auth',
-      JSON.stringify({ email: form.email, logged: true })
-    );
+    try {
+      await loginUser({
+        email: form.email,
+        senha: form.password,
+      });
+      const userData = await getCurrentUser();
 
-    navigate('/');
+      if (!userData.configuracao_inicial_concluida) {
+      navigate('/configuracao-inicial');
+      return;
+    }
+
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Erro ao fazer login.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleGoogleLogin() {
-    alert('Login com Google será conectado ao backend futuramente.');
+    alert('Login com Google será conectado futuramente.');
   }
 
   return (
@@ -46,6 +68,12 @@ export default function Login() {
           <div className="h-px bg-gray-200 flex-1" />
         </div>
 
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-xl mb-4">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -66,6 +94,7 @@ export default function Login() {
               <label className="block text-sm font-bold text-gray-700">
                 Senha
               </label>
+
               <Link
                 to="/recuperar-senha"
                 className="text-xs text-brand-orange font-bold hover:underline"
@@ -78,14 +107,19 @@ export default function Login() {
               required
               type="password"
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, password: e.target.value })
+              }
               className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100"
               placeholder="••••••••"
             />
           </div>
 
-          <button className="w-full bg-brand-teal text-white py-3 rounded-xl font-black shadow hover:bg-teal-700 transition">
-            Entrar
+          <button
+            disabled={loading}
+            className="w-full bg-brand-teal text-white py-3 rounded-xl font-black shadow hover:bg-teal-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 

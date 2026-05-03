@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { loginUser, registerUser } from '../services/api';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -9,43 +10,59 @@ export default function Registro() {
   const [form, setForm] = useState({
     name: '',
     email: '',
+    phone: '',
     monthlyIncome: '',
     password: '',
     confirmPassword: '',
   });
 
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (form.password !== form.confirmPassword) {
-      setError('As senhas não são iguais.');
-      return;
+    try {
+      if (form.password !== form.confirmPassword) {
+        throw new Error('As senhas não são iguais.');
+      }
+
+      if (form.password.length < 6) {
+        throw new Error('A senha deve ter pelo menos 6 caracteres.');
+      }
+
+      await registerUser({
+        nome: form.name,
+        email: form.email,
+        telefone: form.phone || null,
+        senha: form.password,
+      });
+
+      await loginUser({
+        email: form.email,
+        senha: form.password,
+
+      });
+     
+
+      updateUser({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+      });
+   
+      navigate('/configuracao-inicial');
+    } catch (err) {
+      setError(err.message || 'Erro ao criar conta.');
+    } finally {
+      setLoading(false);
     }
-
-    if (form.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
-
-    updateUser({
-      name: form.name,
-      email: form.email,
-      monthlyIncome: Number(form.monthlyIncome || 0),
-    });
-
-    localStorage.setItem(
-      'financas-auth',
-      JSON.stringify({ email: form.email, logged: true })
-    );
-
-    navigate('/');
   }
 
   function handleGoogleRegister() {
-    alert('Cadastro com Google será conectado ao backend futuramente.');
+    alert('Cadastro com Google será conectado futuramente.');
   }
 
   return (
@@ -75,7 +92,7 @@ export default function Registro() {
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-xl">
+          <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-xl mb-4">
             {error}
           </div>
         )}
@@ -110,19 +127,15 @@ export default function Registro() {
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
-              Renda mensal
+              Telefone
             </label>
             <input
-              type="number"
-              value={form.monthlyIncome}
-              onChange={(e) =>
-                setForm({ ...form, monthlyIncome: e.target.value })
-              }
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-100"
-              placeholder="Ex: 1700"
+              placeholder="(18) 99999-9999"
             />
           </div>
-
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
               Senha
@@ -153,8 +166,11 @@ export default function Registro() {
             />
           </div>
 
-          <button className="w-full bg-brand-orange text-white py-3 rounded-xl font-black shadow hover:bg-orange-700 transition">
-            Criar conta
+          <button
+            disabled={loading}
+            className="w-full bg-brand-orange text-white py-3 rounded-xl font-black shadow hover:bg-orange-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Criando conta...' : 'Criar conta'}
           </button>
         </form>
 

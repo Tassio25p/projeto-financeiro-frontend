@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { removeToken } from '../services/api';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const links = [
   { path: '/', label: 'Dashboard' },
@@ -12,6 +13,14 @@ const links = [
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    removeToken();
+  localStorage.removeItem('financas-auth');
+  localStorage.removeItem('financas-app-data-v2');
+    navigate('/login');
+  }
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -47,12 +56,13 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-gray-100">
-        <Link
-          to="/login"
-          className="block p-3 text-red-500 rounded-xl hover:bg-red-50 transition text-center font-bold text-sm"
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="block w-full p-3 text-red-500 rounded-xl hover:bg-red-50 transition text-center font-bold text-sm"
         >
           Sair
-        </Link>
+        </button>
       </div>
     </aside>
   );

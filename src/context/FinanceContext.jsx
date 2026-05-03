@@ -1,58 +1,105 @@
-import { createContext, useContext, useMemo, useState } from 'react';
-import { currentMonthKey, toInputDate } from '../utils/formatters';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { currentMonthKey } from '../utils/formatters';
+import { getCurrentUser, getToken } from '../services/api';
 
 const STORAGE_KEY = 'financas-app-data-v2';
 
 const initialData = {
-  user: {
-    name: 'Tássio Henrique',
-    email: 'tassio@email.com',
-    monthlyIncome: 1700,
-  },
-  categories: [
-    { id: 1, name: 'Salário', type: 'receita', color: 'teal' },
-    { id: 2, name: 'Freelance', type: 'receita', color: 'blue' },
-    { id: 3, name: 'Alimentação', type: 'despesa', color: 'orange' },
-    { id: 4, name: 'Moradia', type: 'despesa', color: 'purple' },
-    { id: 5, name: 'Transporte', type: 'despesa', color: 'cyan' },
-    { id: 6, name: 'Lazer', type: 'despesa', color: 'pink' },
-    { id: 7, name: 'Saúde', type: 'despesa', color: 'red' },
-    { id: 8, name: 'Educação', type: 'despesa', color: 'indigo' },
-  ],
-  transactions: [
-    { id: 1, description: 'Salário mensal', value: 1700, type: 'receita', category: 'Salário', method: 'Pix', date: toInputDate(new Date()) },
-    { id: 2, description: 'Mercado', value: 320, type: 'despesa', category: 'Alimentação', method: 'Cartão', date: toInputDate(new Date()) },
-    { id: 3, description: 'Internet', value: 99.9, type: 'despesa', category: 'Moradia', method: 'Boleto', date: toInputDate(new Date()) },
-    { id: 4, description: 'Gasolina', value: 120, type: 'despesa', category: 'Transporte', method: 'Pix', date: toInputDate(new Date()) },
-  ],
-  goals: [
-    { id: 1, title: 'Reserva de emergência', target: 3000, saved: 650, deadline: '2026-12-31' },
-    { id: 2, title: 'Notebook novo', target: 4500, saved: 900, deadline: '2026-10-15' },
-  ],
-  budgets: [
-    { id: 1, category: 'Alimentação', limit: 700, month: currentMonthKey() },
-    { id: 2, category: 'Transporte', limit: 300, month: currentMonthKey() },
-    { id: 3, category: 'Lazer', limit: 250, month: currentMonthKey() },
-  ],
+user: {
+  name: '',
+  email: '',
+  phone: '',
+  photoUrl: '',
+  monthlyIncome: 0,
+  initialBalance: 0,
+  setupCompleted: false,
+},
+  categories: [],
+  transactions: [  ],
+  goals: [],
+  budgets: [],
 };
 
 const FinanceContext = createContext(null);
 
 function loadData() {
   try {
+    const token = getToken();
+
+    // Se tem token, não usamos usuário salvo antigo.
+    // O usuário real será carregado pelo /usuarios/me.
+    if (token) {
+      return {
+        ...initialData,
+        user: {
+          name: '',
+          email: '',
+          phone: '',
+          photoUrl: '',
+          monthlyIncome: 0,
+        },
+      };
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? { ...initialData, ...JSON.parse(saved) } : initialData;
   } catch {
     return initialData;
   }
 }
-
 function persist(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 export function FinanceProvider({ children }) {
   const [data, setData] = useState(loadData);
+
+useEffect(() => {
+  async function loadCurrentUserFromApi() {
+    const token = getToken();
+
+    if (!token) {
+      setData(initialData);
+      return;
+    }
+
+    try {
+      const userData = await getCurrentUser();
+
+      setData((current) => {
+        const next = {
+          ...current,
+          user: {
+            ...current.user,
+            name: userData.nome || '',
+            email: userData.email || '',
+            phone: userData.telefone || '',
+            photoUrl: userData.foto_url || '',
+            monthlyIncome: Number(userData.renda_mensal || 0),
+            initialBalance: Number(userData.saldo_inicial || 0),
+            setupCompleted: Boolean(userData.configuracao_inicial_concluida),
+          },
+        };
+
+        persist(next);
+        return next;
+      });
+    } catch (error) {
+      console.error('Erro ao buscar usuário logado:', error.message);
+    }
+  }
+
+  loadCurrentUserFromApi();
+
+  window.addEventListener('auth-changed', loadCurrentUserFromApi);
+
+  return () => {
+    window.removeEventListener('auth-changed', loadCurrentUserFromApi);
+  };
+}, []);
+
+
+
 
   function updateData(updater) {
     setData((current) => {
