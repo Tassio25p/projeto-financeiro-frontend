@@ -84,14 +84,15 @@ export default function Dashboard() {
   }, []);
 
   const recentTransactions = summary.ultimas_transacoes.map((item) => ({
-    id: item.id,
-    description: item.descricao,
-    value: Number(item.valor || 0),
-    type: item.tipo,
-    date: item.data,
-    categoryId: item.categoria_id,
-    method: item.metodo_pagamento || '',
-  }));
+  id: item.id,
+  description: item.descricao,
+  value: Number(item.valor || 0),
+  type: item.tipo,
+  date: item.data,
+  categoryId: item.categoria_id,
+  category: item.categoria_nome || 'Sem categoria',
+  method: item.metodo_pagamento || '',
+}));
 
   const monthlyChart = useMemo(() => {
     const chart = Object.values(
@@ -247,7 +248,7 @@ export default function Dashboard() {
                   </p>
 
                   <p className="text-xs text-gray-400">
-                    Categoria #{item.categoryId} • {formatDate(item.date)}
+                    Categoria {item.category} • {formatDate(item.date)}
                   </p>
                 </div>
 

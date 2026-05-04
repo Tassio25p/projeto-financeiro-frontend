@@ -220,3 +220,71 @@ export function getDashboardSummary() {
     headers: getHeaders(true),
   });
 }
+
+// ==========================
+// METAS FINANCEIRAS
+// ==========================
+
+export function getGoals() {
+  return request('/metas/', {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+}
+
+export function createGoal(payload) {
+  return request('/metas/', {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateGoalApi(id, payload) {
+  return request(`/metas/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteGoalApi(id) {
+  return request(`/metas/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(true),
+  });
+}
+
+// ==========================
+// ORÇAMENTOS
+// ==========================
+
+export function getBudgets() {
+  return request('/orcamentos/', {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+}
+
+export function createBudget(payload) {
+  return request('/orcamentos/', {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateBudgetApi(id, payload) {
+  return request(`/orcamentos/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteBudgetApi(id) {
+  return request(`/orcamentos/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(true),
+  });
+}
